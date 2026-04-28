@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>牌位生成器</title>
+    <style>
+        /* 基本頁面樣式設定 */
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        /* 設定名字輸入框的大小與字型 */
+        textarea {
+            width: 200px;
+            height: 200px;
+            font-size: 16px;
+        }
+
+        /* 生成按鈕的間距與填塞 */
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+
+        /* 結果圖片的預覽樣式，包含邊框與寬度限制 */
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>🧾 牌位生成器</h2>
+
+    <!-- 表單提交設定：將資料以 POST 方法傳送至後端處理程式 print_tablet.php -->
+    <form action="print_tablet.php" method="post">
+        <!-- names 屬性對應 PHP 中的 $_POST['names'] -->
+        <textarea name="names" placeholder="一行一個名字"></textarea><br>
+        <button type="submit">生成 PNG</button>
+    </form>
+
+    <hr>
+
+    <!-- 靜態顯示生成結果的部分 -->
+    <h3>結果：</h3>
+    <!-- 下載連結：指向預計產生的檔名 output.png，並啟用下載屬性 -->
+    <a href="output.png" download>⬇ 下載圖片</a>
+</body>
+
+</html>
