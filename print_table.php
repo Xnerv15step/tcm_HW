@@ -129,7 +129,7 @@ function calcPositions(array $names, array $layout): array
 function renderTablet(array $positions, string $outputPath): void
 {
     // 載入底圖
-    $img = imagecreatefrompng('空白.png');
+    $img = imagecreatefrompng('blank.png');
 
     // 文字顏色（黑色）
     $black = imagecolorallocate($img, 0, 0, 0);

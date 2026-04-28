@@ -10,7 +10,7 @@ $default = "郭仰德\n方孝子\n王山水\n李月華\n陳大文";
 $raw = $_POST['names'] ?? $default;
 $error = null;
 $downloadId = null;
-$previewUrl = '空白.png'; // 預設的預覽圖片佔位符
+$previewUrl = 'blank.png'; // 預設的預覽圖片佔位符
 
 // 處理表單提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
