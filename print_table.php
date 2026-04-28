@@ -129,13 +129,16 @@ function calcPositions(array $names, array $layout): array
 function renderTablet(array $positions, string $outputPath): void
 {
     // 載入底圖
-    $img = imagecreatefrompng('blank.png');
+    $img = imagecreatefrompng(__DIR__ . '/blank.png');
 
     // 文字顏色（黑色）
     $black = imagecolorallocate($img, 0, 0, 0);
 
     // 字型（楷體，支援繁中）
     $font = 'C:/Windows/Fonts/kaiu.ttf';
+    if (!is_file($font)) {
+        throw new RuntimeException('找不到字型檔：' . $font);
+    }
 
     // 每個字的垂直間距（字高 + 間距）
     $advance = FONT_SIZE + LETTER_SPACING;
