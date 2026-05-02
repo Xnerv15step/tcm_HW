@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>牌位生成器</title>
+    <style>
+        /* 基本頁面樣式設定 */
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        /* 設定名字輸入框的大小與字型 */
+        textarea {
+            width: 200px;
+            height: 200px;
+            font-size: 16px;
+        }
+
+        /* 生成按鈕的間距與填塞 */
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+
+        /* 結果圖片的預覽樣式，包含邊框與寬度限制 */
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>🧾 牌位生成器</h2>
+
+    <form id="genForm">
+        <textarea id="names" name="names" placeholder="一行一個名字"></textarea><br>
+        <button type="submit">生成 PNG</button>
+    </form>
+
+    <hr>
+
+    <!-- 靜態顯示生成結果的部分 -->
+    <h3>結果：</h3>
+    <a id="downloadLink" href="#" download style="display:none;">⬇ 下載圖片</a>
+    <div id="status" style="margin-top:10px;color:#555;"></div>
+    <img id="preview" alt="preview" style="display:none;" />
+
+    <script>
+        const form = document.getElementById('genForm');
+        const namesEl = document.getElementById('names');
+        const statusEl = document.getElementById('status');
+        const previewEl = document.getElementById('preview');
+        const downloadEl = document.getElementById('downloadLink');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            statusEl.textContent = '產生中...';
+            previewEl.style.display = 'none';
+            downloadEl.style.display = 'none';
+
+            try {
+                const res = await fetch('api/generate.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ names: namesEl.value })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data?.error || '產生失敗');
+
+                previewEl.src = data.previewUrl + '&t=' + Date.now();
+                previewEl.style.display = 'block';
+                downloadEl.href = data.downloadUrl;
+                downloadEl.style.display = 'inline-block';
+                statusEl.textContent = '完成！';
+            } catch (err) {
+                statusEl.textContent = String(err?.message || err || '產生失敗');
+            }
+        });
+    </script>
+</body>
+
+</html>

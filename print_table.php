@@ -19,7 +19,7 @@ const NAME_H  = 1260;  // 高度
 // ✍️ 字體設定
 // ─────────────────────────────────────────────
 const FONT_SIZE = 80;            // 字體大小
-const LETTER_SPACING = 10;       // 字與字之間的額外間距（直書用）
+const LETTER_SPACING = 15;       // 字與字之間的額外間距（直書用）
 const NAME_SHIFT_X = -40;        // 整體水平微調（修正視覺偏移）
 
 function normalizeNames(string $raw, int $max = 10): array
@@ -52,7 +52,7 @@ function getLayout(int $n): array
         4 => [2, 2],
         5 => [2, 3],
         6 => [3, 3],
-        7 => [3, 4],
+        7 => [2, 2, 3],
         8 => [4, 4],
         9 => [3, 3, 3],
         10 => [3, 3, 4],
@@ -106,6 +106,7 @@ function calcPositions(array $names, array $layout): array
                 // cx/cy = 格子中心點（layout anchor）
                 'cx' => $centerX,
                 'cy' => $centerY,
+                'layoutHeight' => $layerHeight, // 可用於動態調整字體大小
             ];
 
             $nameIndex++;
@@ -140,8 +141,7 @@ function renderTablet(array $positions, string $outputPath): void
         throw new RuntimeException('找不到字型檔：' . $font);
     }
 
-    // 每個字的垂直間距（字高 + 間距）
-    $advance = FONT_SIZE + LETTER_SPACING;
+
 
 
     // ─────────────────────────────────────────────
@@ -156,9 +156,11 @@ function renderTablet(array $positions, string $outputPath): void
     $refChar = '國';
     $refBox = imagettfbbox(FONT_SIZE, 0, $font, $refChar);
 
+    // 參考字的左右極限（用於計算中心點）
     $refMinX = min($refBox[0], $refBox[2], $refBox[4], $refBox[6]);
     $refMaxX = max($refBox[0], $refBox[2], $refBox[4], $refBox[6]);
 
+    // 參考字的中心偏移量（用於修正每個字的水平位置）
     $refCenterOffsetX = ($refMinX + $refMaxX) / 2;
 
 
@@ -167,7 +169,23 @@ function renderTablet(array $positions, string $outputPath): void
     // ─────────────────────────────────────────────
     foreach ($positions as $entry) {
 
+
         $chars = mb_str_split($entry['name']);
+        // 字數（用於計算動態字體大小）
+        $charCount = count($chars);
+
+        // 可用的垂直空間（格子高度），用於動態調整字體大小
+        $availableHeight = $entry['layoutHeight'];
+
+        // 逐字拆解姓名，計算每個字的 bbox，確定整串字的垂直範圍
+        $dynamicFontSize = ($availableHeight / $charCount) - LETTER_SPACING;
+
+        // 動態字體大小
+        $fontSize = min(FONT_SIZE, $dynamicFontSize);
+        // 每個字的垂直間距（包含字體大小 + 額外間距）
+        $soloHeight = $entry['layoutHeight'] / $charCount;
+        // 實際字體大小 + 額外間距，確保字與字之間不會重疊
+        $advance = $fontSize + ($soloHeight - $fontSize) / 2;
 
         // 用來計算整串文字的上下範圍（bounding box）
         $minTerm = null;
@@ -178,7 +196,7 @@ function renderTablet(array $positions, string $outputPath): void
         // ─────────────────────────────
         foreach ($chars as $i => $char) {
 
-            $bbox = imagettfbbox(FONT_SIZE, 0, $font, $char);
+            $bbox = imagettfbbox($fontSize, 0, $font, $char);
 
             $minY = min($bbox[1], $bbox[3], $bbox[5], $bbox[7]);
             $maxY = max($bbox[1], $bbox[3], $bbox[5], $bbox[7]);
@@ -216,7 +234,7 @@ function renderTablet(array $positions, string $outputPath): void
 
             imagettftext(
                 $img,
-                FONT_SIZE,
+                $fontSize,
                 0,
                 (int) round($x0),
                 (int) round($y),
