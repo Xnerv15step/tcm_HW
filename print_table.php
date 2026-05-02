@@ -127,7 +127,7 @@ function calcPositions(array $names, array $layout): array
 // - 做垂直直書排版
 // - 輸出 PNG
 // ─────────────────────────────────────────────
-function renderTablet(array $positions, string $outputPath): void
+function renderTablet(array $positions, ?string $outputPath = null): void
 {
     // 載入底圖
     $img = imagecreatefrompng(__DIR__ . '/blank.png');
@@ -245,13 +245,24 @@ function renderTablet(array $positions, string $outputPath): void
         }
     }
 
-    // 輸出 PNG
-    imagepng($img, $outputPath);
+    // 輸出 PNG：有指定路徑就寫檔；沒指定就直接輸出到 response（避免自動累積檔案）
+    if ($outputPath !== null && $outputPath !== '') {
+        imagepng($img, $outputPath);
+    } else {
+        if (!headers_sent()) {
+            header('Content-Type: image/png');
+            // 預設 inline 預覽，不強制下載（避免瀏覽器自動存檔）
+            $download = isset($_GET['download']) && (string) $_GET['download'] === '1';
+            header('Content-Disposition: ' . ($download ? 'attachment' : 'inline') . '; filename="output.png"');
+            header('Cache-Control: no-store, max-age=0');
+        }
+        imagepng($img);
+    }
 
     // PHP 8.x 已自動管理 GD 圖片資源釋放
 }
 
-function generateTabletImage(array $names, string $outputPath): void
+function generateTabletImage(array $names, ?string $outputPath = null): void
 {
     $names = array_values(array_filter(array_map('trim', $names), static fn($v) => $v !== ''));
     if ($names === []) {
@@ -268,11 +279,8 @@ function generateTabletImage(array $names, string $outputPath): void
 }
 
 
-// ─────────────────────────────────────────────
-// 🚀 CLI / 直接執行時的主流程（for debug）
-// ─────────────────────────────────────────────
-if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__)) {
-    $names = ['郭仰德', '方孝子', '王山水', '李月華', '陳大文'];
-    generateTabletImage($names, 'output.png');
-    echo "完成！";
+// 本檔案預期在 Web Server 中執行（直接回傳 PNG）；不提供 CLI 輸出檔案模式。
+if (PHP_SAPI === 'cli') {
+    fwrite(STDERR, "This script is intended to run via a web server and returns image/png.\n");
+    exit(1);
 }
